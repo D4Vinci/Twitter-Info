@@ -17,7 +17,7 @@ just by username or profile link.
 python(3) twitter_info.py <twitter_profile_link> or <username>
 ```
 
-#### Example
+### Example
 
 
 ##### Input
