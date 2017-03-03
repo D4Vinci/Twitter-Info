@@ -1,40 +1,45 @@
-#Author:D4Vinci
-from bs4 import BeautifulSoup as So
-import urllib ,sys
+# Contributor(s): nigella (@nig)
+
+from re import findall
+from sys import argv, exit
+from urllib.request import urlopen
+
+__author__ = 'D4Vinci'
 
 def get(twitter):
+    ''' get information of given twitter account link or username '''
+
     try:
-        u = urllib.urlopen(twitter)
-        data = u.read()
-        s = So(data, 'html.parser')
-        details = s.find_all("span" ,{"data-is-compact":"false"})
-        following = details[1].text.encode("utf-8")
-        name = s.find("a" ,{"href":"/"+twitter.split("/")[-1]}).text.encode("utf-8").replace("  ","").replace("\n","")
-        followers = details[2].text.encode("utf-8")
-        likes = details[3].text.encode("utf-8")
-        pic = s.find("a" ,{"class":"ProfileAvatar-container u-block js-tooltip profile-picture"})["href"].encode("utf-8")
-        date = s.find("span" ,{"class":"ProfileHeaderCard-joinDateText js-tooltip u-dir"})["title"].encode("utf-8")
-        print " Name : " + name
-        print " Following : " + following
-        print " Followers : " + followers
-        print " Likes : " + likes
-        print " This Account made in : " + date
-        print " Full Profile Picture : " + pic
-    except:
-        print "Error <Twitter_Profile_link>/<username> is not correct"
-        sys.exit(0)
+        data = urlopen(twitter).read()
+        s = data.decode('utf-8')
+        details = []
+
+        [details.append(value) for value in findall('data-is-compact="false">(.*?)<', s)]
+
+        following = details[1]
+        name      = findall(b'<title>(.*?) \(', data)[0].decode('utf-8')
+        tweets    = details[0]
+        followers = details[2]
+        likes     = details[3]
+        pic       = findall(b'href="https://pbs.twimg.com/profile_images(.*?)"', data)[0].decode('utf-8')
+        date      = findall(b'<span class="ProfileHeaderCard-joinDateText js-tooltip u-dir" dir="ltr" title="(.*?)"', data)[0].decode('utf-8')
+
+        print('''
+        Name: {0}
+        Tweets: {1}
+        Following: {2}
+        Followers: {3}
+        Likes: {4}
+        Account made in: {5}
+        Full profile picture: {6}
+        '''.format(name, tweets, following, followers, likes, date, pic))
+
+    except: print("Error <twitter_profile_link>/<username> is not correct!"); exit(0)
 
 
-try:
-    u = sys.argv[1]
-
-except:
-    print "\n [*] Error :"
-    print " [*] Usage : "+sys.argv[0].split("\\")[-1] +" <Twitter_Profile_link>/<username>"
-    sys.exit(0)
+try: u = argv[1]
+except: print(" [*] Usage: python(3) twitter_info.py <twitter_profile_link>/<username>"); exit(0)
 
 
-if "twitter.com" not in u:
-    get("https://twitter.com/" + u)
-else:
-    get(u)
+if "twitter.com" not in u: get("http://twitter.com/" + u)
+else: get(u)
